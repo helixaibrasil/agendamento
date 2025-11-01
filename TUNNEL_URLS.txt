@@ -1,0 +1,5 @@
+https://agendamento-app-14955.loca.lt 
+https://agendamento-api-14955.loca.lt 
+ 
+https://agendamento-app-14955.loca.lt/admin 
+https://agendamento-api-14955.loca.lt/api/payment/webhook 

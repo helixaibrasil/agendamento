@@ -1,0 +1,408 @@
+import { ScheduleForm } from './components/ScheduleForm.js';
+import { scheduleService } from './services/api.js';
+
+// YouTube Background Video - Loop sem tela preta
+let player;
+let bottomPlayer;
+
+function onYouTubeIframeAPIReady() {
+  // Hero video (top)
+  player = new YT.Player('heroVideoPlayer', {
+    videoId: 'h00jrLVISGo',
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      showinfo: 0,
+      modestbranding: 1,
+      loop: 1,
+      fs: 0,
+      cc_load_policy: 0,
+      iv_load_policy: 3,
+      autohide: 1,
+      mute: 1,
+      playsinline: 1,
+      rel: 0
+    },
+    events: {
+      onReady: onPlayerReady,
+      onStateChange: onPlayerStateChange
+    }
+  });
+
+  // Bottom video (scheduling to footer)
+  bottomPlayer = new YT.Player('bottomVideoPlayer', {
+    videoId: 'h00jrLVISGo',
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      showinfo: 0,
+      modestbranding: 1,
+      loop: 1,
+      fs: 0,
+      cc_load_policy: 0,
+      iv_load_policy: 3,
+      autohide: 1,
+      mute: 1,
+      playsinline: 1,
+      rel: 0
+    },
+    events: {
+      onReady: onBottomPlayerReady,
+      onStateChange: onBottomPlayerStateChange
+    }
+  });
+}
+
+function onPlayerReady(event) {
+  event.target.mute();
+  event.target.playVideo();
+}
+
+function onPlayerStateChange(event) {
+  // Quando o vídeo terminar, reiniciar imediatamente
+  if (event.data === YT.PlayerState.ENDED) {
+    player.seekTo(0);
+    player.playVideo();
+  }
+}
+
+function onBottomPlayerReady(event) {
+  event.target.mute();
+  // Don't autoplay - will be controlled by scroll
+}
+
+function onBottomPlayerStateChange(event) {
+  // Quando o vídeo terminar, reiniciar imediatamente
+  if (event.data === YT.PlayerState.ENDED) {
+    bottomPlayer.seekTo(0);
+    bottomPlayer.playVideo();
+  }
+}
+
+// Carregar YouTube IFrame API
+if (!window.YT) {
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  const firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
+
+// Expor função para o YouTube API
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+// Single DOMContentLoaded event listener to prevent multiple initializations
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 DOM Content Loaded - Initializing app...');
+
+  // Initialize scheduling form
+  new ScheduleForm('scheduleApp');
+
+  // Load pricing cards
+  await loadPricingCards();
+
+  // Initialize scroll reveal animations
+  setTimeout(initScrollReveal, 100);
+
+  // Initialize header, navigation and mobile menu
+  initHeader();
+
+  // Initialize reviews carousel
+  initReviewsCarousel();
+
+  // Initialize bottom video control
+  initBottomVideoControl();
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  console.log('✅ App initialization complete');
+});
+
+// Scroll Reveal Animations with Intersection Observer
+function initScrollReveal() {
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, observerOptions);
+
+  // Observe all reveal elements
+  document.querySelectorAll('.reveal, .reveal-up, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
+    observer.observe(el);
+  });
+
+  // Stagger animation for grid items
+  document.querySelectorAll('.stagger-container').forEach(container => {
+    const items = container.querySelectorAll('.stagger-item');
+    items.forEach((item, index) => {
+      setTimeout(() => {
+        const itemObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+            }
+          });
+        }, observerOptions);
+
+        itemObserver.observe(item);
+      }, index * 100); // 100ms delay between items
+    });
+  });
+}
+
+// Scroll reveal initialization moved to main DOMContentLoaded listener above
+
+// Header Scroll Effect & Mobile Menu
+function initHeader() {
+  const header = document.getElementById('siteHeader');
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const mainNav = document.querySelector('.main-nav');
+
+  // Add scroll effect
+  window.addEventListener('scroll', () => {
+    // Header fica claro logo ao começar a scrollar
+    if (window.scrollY > 10) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+  });
+
+  // Mobile menu toggle
+  if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', () => {
+      mobileMenuToggle.classList.toggle('active');
+      mainNav.classList.toggle('active');
+    });
+  }
+
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop;
+      const sectionHeight = section.clientHeight;
+      if (scrollY >= sectionTop - 200) {
+        current = section.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('active');
+      }
+    });
+  });
+}
+
+// Header, reviews carousel and bottom video initialization moved to main DOMContentLoaded listener above
+
+// Control bottom video visibility based on scroll
+function initBottomVideoControl() {
+  const bottomVideoBg = document.getElementById('bottomVideoBg');
+  const schedulingSection = document.getElementById('agendamento');
+
+  if (!bottomVideoBg || !schedulingSection) return;
+
+  let bottomVideoPlaying = false;
+
+  window.addEventListener('scroll', () => {
+    const schedulingTop = schedulingSection.offsetTop;
+    const scrollPosition = window.scrollY + window.innerHeight;
+
+    // Show bottom video when user scrolls to scheduling section
+    if (scrollPosition >= schedulingTop + 200) {
+      if (!bottomVideoBg.classList.contains('visible')) {
+        bottomVideoBg.classList.add('visible');
+        // Start playing when visible
+        if (bottomPlayer && !bottomVideoPlaying) {
+          bottomPlayer.playVideo();
+          bottomVideoPlaying = true;
+        }
+      }
+    } else {
+      if (bottomVideoBg.classList.contains('visible')) {
+        bottomVideoBg.classList.remove('visible');
+        // Pause when hidden
+        if (bottomPlayer && bottomVideoPlaying) {
+          bottomPlayer.pauseVideo();
+          bottomVideoPlaying = false;
+        }
+      }
+    }
+  });
+}
+
+// Reviews Carousel
+function initReviewsCarousel() {
+  const track = document.querySelector('.reviews-carousel-track');
+  const items = document.querySelectorAll('.carousel-item');
+  const prevBtn = document.querySelector('.carousel-prev');
+  const nextBtn = document.querySelector('.carousel-next');
+  const dotsContainer = document.querySelector('.carousel-dots');
+
+  if (!track || items.length === 0) return;
+
+  let currentIndex = 0;
+  let itemsPerPage = getItemsPerPage();
+
+  // Create dots
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  for (let i = 0; i < totalPages; i++) {
+    const dot = document.createElement('button');
+    dot.classList.add('carousel-dot');
+    if (i === 0) dot.classList.add('active');
+    dot.addEventListener('click', () => goToSlide(i));
+    dotsContainer.appendChild(dot);
+  }
+
+  function getItemsPerPage() {
+    if (window.innerWidth <= 768) return 1;
+    if (window.innerWidth <= 1024) return 2;
+    return 3;
+  }
+
+  function updateCarousel() {
+    const itemWidth = items[0].offsetWidth;
+    const gap = parseInt(getComputedStyle(track).gap) || 24;
+    const offset = -(currentIndex * itemsPerPage * (itemWidth + gap));
+    track.style.transform = `translateX(${offset}px)`;
+
+    // Update dots
+    const dots = dotsContainer.querySelectorAll('.carousel-dot');
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
+    });
+
+    // Update buttons state
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex >= totalPages - 1;
+  }
+
+  function goToSlide(index) {
+    currentIndex = Math.max(0, Math.min(index, totalPages - 1));
+    updateCarousel();
+  }
+
+  function nextSlide() {
+    if (currentIndex < totalPages - 1) {
+      currentIndex++;
+      updateCarousel();
+    }
+  }
+
+  function prevSlide() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      updateCarousel();
+    }
+  }
+
+  prevBtn.addEventListener('click', prevSlide);
+  nextBtn.addEventListener('click', nextSlide);
+
+  // Handle resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const newItemsPerPage = getItemsPerPage();
+      if (newItemsPerPage !== itemsPerPage) {
+        itemsPerPage = newItemsPerPage;
+        currentIndex = 0;
+
+        // Recreate dots
+        dotsContainer.innerHTML = '';
+        const newTotalPages = Math.ceil(items.length / itemsPerPage);
+        for (let i = 0; i < newTotalPages; i++) {
+          const dot = document.createElement('button');
+          dot.classList.add('carousel-dot');
+          if (i === 0) dot.classList.add('active');
+          dot.addEventListener('click', () => goToSlide(i));
+          dotsContainer.appendChild(dot);
+        }
+
+        updateCarousel();
+      }
+    }, 250);
+  });
+
+  updateCarousel();
+}
+
+async function loadPricingCards() {
+  try {
+    const prices = await scheduleService.getPrices();
+    const pricingGrid = document.getElementById('pricingGrid');
+
+    if (!pricingGrid) return;
+
+    pricingGrid.innerHTML = `
+      <div class="pricing-card featured stagger-item">
+        <div class="discount-badge">Mais Popular</div>
+        <h3>Vistoria Cautelar</h3>
+        <div class="price">${prices.cautelar.valorFormatado}</div>
+        <div class="price-detail">Proteção completa após a venda</div>
+        <ul style="text-align: left; margin: 20px 0; list-style: none; padding: 0;">
+          <li style="padding: 8px 0;">✓ Laudo completo</li>
+          <li style="padding: 8px 0;">✓ Validade jurídica</li>
+          <li style="padding: 8px 0;">✓ Proteção contra multas</li>
+          <li style="padding: 8px 0;">✓ Atendimento em 24h</li>
+        </ul>
+        <a href="#agendamento" class="btn btn-primary" style="width: 100%;">Agendar</a>
+      </div>
+
+      <div class="pricing-card stagger-item">
+        <h3>Vistoria Transferência</h3>
+        <div class="price">${prices.transferencia.valorFormatado}</div>
+        <div class="price-detail">Para transferência de propriedade</div>
+        <ul style="text-align: left; margin: 20px 0; list-style: none; padding: 0;">
+          <li style="padding: 8px 0;">✓ Laudo técnico</li>
+          <li style="padding: 8px 0;">✓ Documentação completa</li>
+          <li style="padding: 8px 0;">✓ Reconhecido DETRAN</li>
+          <li style="padding: 8px 0;">✓ Processo rápido</li>
+        </ul>
+        <a href="#agendamento" class="btn btn-secondary" style="width: 100%;">Agendar</a>
+      </div>
+
+      <div class="pricing-card stagger-item">
+        <h3>Outros Serviços</h3>
+        <div class="price">A partir de ${prices.outros.valorFormatado}</div>
+        <div class="price-detail">Consulte-nos para outros tipos</div>
+        <ul style="text-align: left; margin: 20px 0; list-style: none; padding: 0;">
+          <li style="padding: 8px 0;">✓ Pré Cautelar</li>
+          <li style="padding: 8px 0;">✓ Vistoria periódica</li>
+          <li style="padding: 8px 0;">✓ Laudo para seguro</li>
+          <li style="padding: 8px 0;">✓ Outros laudos</li>
+        </ul>
+        <a href="#agendamento" class="btn btn-secondary" style="width: 100%;">Agendar</a>
+      </div>
+    `;
+
+    // Re-init scroll reveal for dynamically added cards
+    setTimeout(initScrollReveal, 100);
+  } catch (error) {
+    console.error('Error loading pricing:', error);
+  }
+}
+

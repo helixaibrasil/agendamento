@@ -1,0 +1,157 @@
+const localtunnel = require('localtunnel');
+
+let tunnel = null;
+let reconnectTimer = null;
+let isShuttingDown = false;
+
+/**
+ * Inicia o LocalTunnel com auto-reconnect
+ */
+async function startTunnel() {
+  if (isShuttingDown) {
+    console.log('🛑 Sistema está encerrando, não iniciando novo tunnel');
+    return;
+  }
+
+  try {
+    // Fecha tunnel existente se houver
+    if (tunnel) {
+      await closeTunnel();
+    }
+
+    const port = process.env.PORT || 3000;
+    const subdomain = process.env.TUNNEL_SUBDOMAIN || undefined;
+
+    console.log('🔌 Iniciando LocalTunnel...');
+    console.log(`   Porta: ${port}`);
+    if (subdomain) {
+      console.log(`   Subdomínio: ${subdomain}`);
+    }
+
+    tunnel = await localtunnel({
+      port: port,
+      subdomain: subdomain
+    });
+
+    console.log('✅ LocalTunnel ativo!');
+    console.log(`🌐 URL Pública: ${tunnel.url}`);
+    console.log('📌 Configure este URL como webhook no Mercado Pago:');
+    console.log(`   ${tunnel.url}/api/payment/webhook`);
+    console.log('');
+
+    // Listener para quando o tunnel fechar
+    tunnel.on('close', () => {
+      if (!isShuttingDown) {
+        console.log('⚠️  LocalTunnel fechado inesperadamente');
+        console.log('🔄 Reconectando em 5 segundos...');
+
+        // Limpa o timer anterior se existir
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+        }
+
+        // Agenda reconexão
+        reconnectTimer = setTimeout(() => {
+          startTunnel();
+        }, 5000);
+      }
+    });
+
+    // Listener para erros
+    tunnel.on('error', (err) => {
+      console.error('❌ Erro no LocalTunnel:', err.message);
+      if (!isShuttingDown) {
+        console.log('🔄 Tentando reconectar em 5 segundos...');
+
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+        }
+
+        reconnectTimer = setTimeout(() => {
+          startTunnel();
+        }, 5000);
+      }
+    });
+
+    // Heartbeat - verifica se o tunnel ainda está ativo a cada 30 segundos
+    const heartbeat = setInterval(async () => {
+      if (isShuttingDown) {
+        clearInterval(heartbeat);
+        return;
+      }
+
+      try {
+        if (!tunnel || !tunnel.url) {
+          console.log('⚠️  Tunnel não está respondendo');
+          clearInterval(heartbeat);
+          await startTunnel();
+        }
+      } catch (error) {
+        console.error('❌ Erro no heartbeat:', error.message);
+        clearInterval(heartbeat);
+        await startTunnel();
+      }
+    }, 30000);
+
+  } catch (error) {
+    console.error('❌ Erro ao iniciar LocalTunnel:', error.message);
+
+    if (!isShuttingDown) {
+      console.log('🔄 Tentando novamente em 10 segundos...');
+
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+
+      reconnectTimer = setTimeout(() => {
+        startTunnel();
+      }, 10000);
+    }
+  }
+}
+
+/**
+ * Fecha o tunnel gracefully
+ */
+async function closeTunnel() {
+  if (tunnel) {
+    console.log('🛑 Fechando LocalTunnel...');
+    try {
+      tunnel.close();
+      tunnel = null;
+    } catch (error) {
+      console.error('❌ Erro ao fechar tunnel:', error.message);
+    }
+  }
+}
+
+/**
+ * Shutdown graceful
+ */
+async function shutdown() {
+  isShuttingDown = true;
+
+  console.log('');
+  console.log('🛑 Encerrando LocalTunnel...');
+
+  // Cancela reconexões pendentes
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+
+  // Fecha o tunnel
+  await closeTunnel();
+
+  console.log('✅ LocalTunnel encerrado com sucesso');
+}
+
+// Handlers para shutdown graceful
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+module.exports = {
+  startTunnel,
+  closeTunnel,
+  getTunnelUrl: () => tunnel?.url || null
+};

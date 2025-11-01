@@ -21,6 +21,18 @@ O webhook do Mercado Pago é essencial para que o sistema seja notificado **auto
 
 Configurar um **subdomínio fixo** no LocalTunnel para que a URL do webhook **não mude** toda vez que você reiniciar o servidor. Isso permite configurar uma única vez no Mercado Pago e esquecer!
 
+## 🚀 Modo Sempre Ativo (Infinito)
+
+O sistema foi otimizado para manter o LocalTunnel **sempre ativo e estável**:
+
+- ✅ **Reconexão automática**: Se o tunnel cair, reconecta em 5 segundos
+- ✅ **Heartbeat a cada 15 segundos**: Verifica se o tunnel está respondendo
+- ✅ **Keep-alive agressivo**: Faz ping HTTP automático para evitar timeout
+- ✅ **URL fixa**: Com subdomínio configurado, a URL nunca muda
+- ✅ **Modo infinito**: Fica rodando enquanto o backend estiver ativo
+
+**Resultado:** Webhook funciona 24/7 durante o desenvolvimento, sem interrupções!
+
 ---
 
 ## ⚙️ PASSO 1: Configurar Subdomínio Fixo no Backend
@@ -41,9 +53,11 @@ ENABLE_TUNNEL=true
 TUNNEL_SUBDOMAIN=agendamentos-dev
 ```
 
-### 1.3 Personalizar Subdomínio
+### 1.3 Personalizar Subdomínio (Opcional)
 
-**IMPORTANTE:** Escolha um subdomínio único e memorável!
+**PADRÃO RECOMENDADO:** `agendamentos-dev` (já configurado!)
+
+Este subdomínio já está configurado e pronto para uso. Se preferir personalizar:
 
 ```env
 # ✅ RECOMENDADO: Use seu nome ou da empresa
@@ -65,7 +79,7 @@ TUNNEL_SUBDOMAIN=api
 ENABLE_TUNNEL=true
 ```
 
-Se estiver `false`, mude para `true`.
+✅ Já está habilitado por padrão! O tunnel vai iniciar automaticamente.
 
 ---
 
@@ -101,7 +115,7 @@ Na janela do **Backend**, você verá algo como:
 ⚠️  Configure esta URL no Mercado Pago como webhook!
 
 🔗 URL do Webhook:
-   https://agendamentos-dev-joao.loca.lt/api/webhook/mercadopago
+   https://agendamentos-dev.loca.lt/api/webhook/mercadopago
 ```
 
 **COPIE** essa URL completa do webhook! Você vai precisar dela no próximo passo.
@@ -231,7 +245,7 @@ Se aparecer isso, **está funcionando perfeitamente!** ✅
 Antes de considerar tudo configurado, verifique:
 
 - [ ] `.env` tem `ENABLE_TUNNEL=true`
-- [ ] `.env` tem `TUNNEL_SUBDOMAIN=seu-subdominio-fixo`
+- [ ] `.env` tem `TUNNEL_SUBDOMAIN=agendamentos-dev` (ou personalizado)
 - [ ] Servidor backend iniciado e mostrando URL do tunnel
 - [ ] URL do tunnel abre no navegador (após clicar "Continue")
 - [ ] Webhook configurado no painel do Mercado Pago
@@ -239,6 +253,64 @@ Antes de considerar tudo configurado, verifique:
 - [ ] Pagamento de teste realizado com sucesso
 - [ ] Status atualizado automaticamente no admin
 - [ ] E-mail de confirmação enviado
+
+---
+
+## 🔄 Verificando Modo Sempre Ativo
+
+### Como saber que o tunnel está rodando corretamente?
+
+No terminal do **Backend**, você verá estas mensagens:
+
+**Ao iniciar:**
+```
+================================================================
+✅ LocalTunnel iniciado com sucesso!
+================================================================
+
+🌐 URL Pública: https://agendamentos-dev.loca.lt
+
+🔗 URL do Webhook:
+   https://agendamentos-dev.loca.lt/api/webhook/mercadopago
+
+⚠️  Configure esta URL no Mercado Pago como webhook!
+📖 Guia: WEBHOOK_LOCAL_SETUP.md
+
+🔄 Modo: Sempre ativo com reconexão automática
+================================================================
+```
+
+**Se o tunnel cair (raro):**
+```
+⚠️  LocalTunnel fechado inesperadamente
+🔄 Reconectando em 5 segundos...
+```
+
+E depois reconecta automaticamente! ✅
+
+### Testando a Estabilidade
+
+1. **Deixe o backend rodando por várias horas**
+   - O tunnel deve permanecer ativo
+   - A URL continua a mesma
+   - Webhooks continuam funcionando
+
+2. **Simule uma queda de conexão**
+   - Desconecte a internet por alguns segundos
+   - Reconecte
+   - O tunnel reconecta automaticamente em até 5 segundos
+
+3. **Faça vários pagamentos de teste**
+   - Todos devem atualizar o status corretamente
+   - Webhooks devem chegar sem falhas
+
+### Monitoramento
+
+O sistema faz **ping automático a cada 15 segundos** no tunnel para mantê-lo ativo. Você não verá logs desses pings (são silenciosos), mas eles garantem que:
+
+- ✅ Tunnel não dorme por inatividade
+- ✅ Conexão permanece estável
+- ✅ Webhook sempre responde
 
 ---
 

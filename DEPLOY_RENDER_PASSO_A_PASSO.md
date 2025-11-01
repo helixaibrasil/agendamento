@@ -116,8 +116,8 @@ DATABASE_URL=postgres://agendamentos_user:SENHA@dpg-xxxxx.oregon-postgres.render
 JWT_SECRET=mude_esta_chave_para_algo_muito_seguro_e_aleatorio_123456789
 
 # Email SMTP
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
+EMAIL_HOST=sandbox.smtp.mailtrap.io
+EMAIL_PORT=2525
 EMAIL_SECURE=false
 EMAIL_USER=seu_email@gmail.com
 EMAIL_PASS=sua_senha_de_app_do_gmail
@@ -242,7 +242,7 @@ VITE_MP_PUBLIC_KEY=sua_public_key_mercadopago
 
 Sua URL de webhook será:
 ```
-https://agendamentos-backend.onrender.com/api/webhook/mercadopago
+https://agendamentos-backend.onrender.com/api/payment/webhook
 ```
 
 Substitua `agendamentos-backend` pelo nome do SEU backend!
@@ -260,7 +260,7 @@ Preencha:
 ┌─────────────────────────────────────────────────┐
 │  URL de produção:                               │
 │  https://agendamentos-backend.onrender.com/...  │
-│  /api/webhook/mercadopago                       │
+│  /api/payment/webhook                       │
 │                                                 │
 │  Eventos:                                       │
 │  ☑ Pagamentos                                   │
@@ -386,7 +386,7 @@ Teste:
 
 **Solução**:
 1. Verifique a URL no painel do Mercado Pago
-2. Deve ser: `https://SEU-BACKEND.onrender.com/api/webhook/mercadopago`
+2. Deve ser: `https://SEU-BACKEND.onrender.com/api/payment/webhook`
 3. Teste enviando uma notificação simulada
 4. Veja os logs do backend no Render
 

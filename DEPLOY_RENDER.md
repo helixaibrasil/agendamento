@@ -538,7 +538,7 @@ VITE_MP_PUBLIC_KEY=sua_public_key_mercadopago_producao
 
 A URL do webhook será:
 ```
-https://agendamentos-backend.onrender.com/api/webhook/mercadopago
+https://agendamentos-backend.onrender.com/api/payment/webhook
 ```
 
 ### 5.2 Configurar no Mercado Pago
@@ -549,7 +549,7 @@ https://agendamentos-backend.onrender.com/api/webhook/mercadopago
 4. Clique em **Webhooks**
 5. Clique em **Configurar notificações**
 6. Configure:
-   - **URL de produção**: `https://agendamentos-backend.onrender.com/api/webhook/mercadopago`
+   - **URL de produção**: `https://agendamentos-backend.onrender.com/api/payment/webhook`
    - **Eventos**:
      - ✅ Pagamentos
      - ✅ Planos de assinatura
@@ -619,7 +619,7 @@ VITE_API_URL=https://api.seudominio.com/api
 
 **Mercado Pago Webhook:**
 ```
-https://api.seudominio.com/api/webhook/mercadopago
+https://api.seudominio.com/api/payment/webhook
 ```
 
 ## ✅ Passo 7: Verificação Final

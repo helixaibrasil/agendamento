@@ -115,7 +115,7 @@ Na janela do **Backend**, você verá algo como:
 ⚠️  Configure esta URL no Mercado Pago como webhook!
 
 🔗 URL do Webhook:
-   https://agendamentos-dev.loca.lt/api/webhook/mercadopago
+   https://agendamentos-dev.loca.lt/api/payment/webhook
 ```
 
 **COPIE** essa URL completa do webhook! Você vai precisar dela no próximo passo.
@@ -271,7 +271,7 @@ No terminal do **Backend**, você verá estas mensagens:
 🌐 URL Pública: https://agendamentos-dev.loca.lt
 
 🔗 URL do Webhook:
-   https://agendamentos-dev.loca.lt/api/webhook/mercadopago
+   https://agendamentos-dev.loca.lt/api/payment/webhook
 
 ⚠️  Configure esta URL no Mercado Pago como webhook!
 📖 Guia: WEBHOOK_LOCAL_SETUP.md
@@ -333,7 +333,7 @@ O sistema faz **ping automático a cada 15 segundos** no tunnel para mantê-lo a
 
 **Solução:**
 1. Verifique se a URL no painel MP está **exatamente igual** à URL do terminal
-2. Certifique-se de que termina com `/api/webhook/mercadopago`
+2. Certifique-se de que termina com `/api/payment/webhook`
 
 **Causa 2:** Backend não está rodando
 
@@ -393,10 +393,10 @@ Quando fizer deploy no Render.com ou outro servidor, configure um webhook **dife
 
 ```
 # Desenvolvimento:
-https://agendamentos-dev.loca.lt/api/webhook/mercadopago
+https://agendamentos-dev.loca.lt/api/payment/webhook
 
 # Produção:
-https://agendamentos-backend.onrender.com/api/webhook/mercadopago
+https://agendamentos-backend.onrender.com/api/payment/webhook
 ```
 
 No Mercado Pago, você pode ter **dois webhooks**: um para teste/desenvolvimento e outro para produção.

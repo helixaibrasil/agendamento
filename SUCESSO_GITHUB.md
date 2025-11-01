@@ -145,7 +145,7 @@ Siga o guia completo: **DEPLOY_RENDER.md**
    - Publish Directory: `dist`
 
 4. **Configurar Webhooks Mercado Pago**
-   - URL: `https://seu-backend.onrender.com/api/webhook/mercadopago`
+   - URL: `https://seu-backend.onrender.com/api/payment/webhook`
 
 ### 4. Configurar Mercado Pago 💳
 

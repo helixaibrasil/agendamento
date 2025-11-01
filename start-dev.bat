@@ -171,7 +171,7 @@ echo   A URL publica do LocalTunnel aparecera na janela do Backend.
 echo   Com TUNNEL_SUBDOMAIN configurado no .env, a URL sera SEMPRE a mesma!
 echo.
 echo   Formato da URL do webhook:
-echo   https://[seu-subdominio].loca.lt/api/webhook/mercadopago
+echo   https://[seu-subdominio].loca.lt/api/payment/webhook
 echo.
 echo   PASSOS PARA CONFIGURAR NO MERCADO PAGO:
 echo   1. Veja a URL completa na janela do Backend

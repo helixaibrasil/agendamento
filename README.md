@@ -492,7 +492,7 @@ MP_PUBLIC_KEY=sua_public_key_aqui
 Para receber notificações de pagamento em produção, configure o webhook no painel do Mercado Pago:
 
 ```
-URL: https://seu-dominio.com/api/webhook/mercadopago
+URL: https://seu-dominio.com/api/payment/webhook
 Eventos: payment
 ```
 

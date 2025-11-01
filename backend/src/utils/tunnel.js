@@ -41,7 +41,7 @@ async function startTunnel() {
     console.log(`🌐 URL Pública: ${tunnel.url}`);
     console.log('');
     console.log('🔗 URL do Webhook:');
-    console.log(`   ${tunnel.url}/api/webhook/mercadopago`);
+    console.log(`   ${tunnel.url}/api/payment/webhook`);
     console.log('');
     console.log('⚠️  Configure esta URL no Mercado Pago como webhook!');
     console.log('📖 Guia: WEBHOOK_LOCAL_SETUP.md');

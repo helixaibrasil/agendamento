@@ -17,10 +17,27 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       }
+    },
+    hmr: {
+      overlay: true
+    },
+    // Force reload CSS
+    watch: {
+      usePolling: true
     }
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'assets'
-  }
+    assetsDir: 'assets',
+    // Disable CSS code splitting to ensure all CSS loads together
+    cssCodeSplit: false,
+    // Clear output dir before build
+    emptyOutDir: true
+  },
+  // Disable CSS minification in dev to ensure proper loading
+  css: {
+    devSourcemap: true
+  },
+  // Clear cache on startup
+  cacheDir: '.vite'
 });

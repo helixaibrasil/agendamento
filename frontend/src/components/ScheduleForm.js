@@ -508,7 +508,7 @@ export class ScheduleForm {
 
       // Go to payment step
       this.nextStep();
-      this.showPayment(result);
+      await this.showPayment(result);
 
     } catch (error) {
       console.error('Error creating appointment:', error);
@@ -518,13 +518,13 @@ export class ScheduleForm {
     }
   }
 
-  showPayment(appointmentData) {
+  async showPayment(appointmentData) {
     const paymentContainer = document.getElementById('paymentContainer');
     if (!paymentContainer) return;
 
     // Initialize payment form
     const paymentForm = new PaymentForm(appointmentData);
-    paymentForm.render('paymentContainer');
+    await paymentForm.render('paymentContainer');
   }
 
   showSuccess(result) {

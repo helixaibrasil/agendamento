@@ -146,13 +146,23 @@ export class ReportsManager {
     const { startDate, endDate } = this.currentPeriod;
 
     // Busca agendamentos do período
-    const appointments = await api.get(`/agendamentos?data_inicio=${startDate}&data_fim=${endDate}`);
+    const appointmentsResponse = await api.get(`/agendamentos?data_inicio=${startDate}&data_fim=${endDate}`);
+
+    // A API retorna { agendamentos: [...], total: X }
+    const appointments = Array.isArray(appointmentsResponse?.agendamentos)
+      ? appointmentsResponse.agendamentos
+      : (Array.isArray(appointmentsResponse) ? appointmentsResponse : []);
 
     // Busca estatísticas
     const stats = await api.get(`/agendamentos/stats?data_inicio=${startDate}&data_fim=${endDate}`);
 
+    console.log('📊 Dados do relatório:', {
+      appointments: appointments.length,
+      stats
+    });
+
     return {
-      appointments: appointments || [],
+      appointments,
       stats: stats || {},
       period: { startDate, endDate }
     };
@@ -164,22 +174,40 @@ export class ReportsManager {
   updateStatsCards(data) {
     const { appointments, stats } = data;
 
-    // Total de agendamentos
-    const totalAppointments = appointments.length;
-    document.getElementById('reportTotalAppointments').textContent = totalAppointments;
+    // Garante que appointments é um array
+    const appointmentsList = Array.isArray(appointments) ? appointments : [];
 
-    // Receita total
-    const totalRevenue = appointments.reduce((sum, app) => sum + (parseFloat(app.preco) || 0), 0);
-    document.getElementById('reportTotalRevenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
+    // Total de agendamentos
+    const totalAppointments = appointmentsList.length;
+    const totalAppointmentsEl = document.getElementById('reportTotalAppointments');
+    if (totalAppointmentsEl) {
+      totalAppointmentsEl.textContent = totalAppointments;
+    }
+
+    // Receita total (preco está em centavos no BD)
+    const totalRevenue = appointmentsList.reduce((sum, app) => {
+      const preco = parseFloat(app.preco) || 0;
+      return sum + (preco / 100); // Converte de centavos para reais
+    }, 0);
+    const totalRevenueEl = document.getElementById('reportTotalRevenue');
+    if (totalRevenueEl) {
+      totalRevenueEl.textContent = `R$ ${totalRevenue.toFixed(2)}`;
+    }
 
     // Novos clientes (clientes únicos)
-    const uniqueClients = new Set(appointments.map(app => app.cliente_cpf)).size;
-    document.getElementById('reportNewClients').textContent = uniqueClients;
+    const uniqueClients = new Set(appointmentsList.map(app => app.cliente_cpf || app.cliente_id)).size;
+    const uniqueClientsEl = document.getElementById('reportNewClients');
+    if (uniqueClientsEl) {
+      uniqueClientsEl.textContent = uniqueClients;
+    }
 
     // Taxa de confirmação
-    const confirmed = appointments.filter(app => app.status === 'confirmado' || app.status === 'realizado').length;
+    const confirmed = appointmentsList.filter(app => app.status === 'confirmado' || app.status === 'realizado').length;
     const confirmationRate = totalAppointments > 0 ? ((confirmed / totalAppointments) * 100).toFixed(1) : '0';
-    document.getElementById('reportConfirmationRate').textContent = `${confirmationRate}%`;
+    const confirmationRateEl = document.getElementById('reportConfirmationRate');
+    if (confirmationRateEl) {
+      confirmationRateEl.textContent = `${confirmationRate}%`;
+    }
 
     // Adiciona indicadores de mudança (comparado com período anterior)
     this.updateChangeIndicators(data);
@@ -231,6 +259,9 @@ export class ReportsManager {
     const { appointments, period } = data;
     const { startDate, endDate } = period;
 
+    // Garante que appointments é um array
+    const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
     // Agrupa receita por dia
     const days = eachDayOfInterval({
       start: parseISO(startDate),
@@ -240,9 +271,12 @@ export class ReportsManager {
     const labels = days.map(day => format(day, 'dd/MM'));
     const revenues = days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
-      return appointments
+      return appointmentsList
         .filter(app => app.data_agendamento === dayStr)
-        .reduce((sum, app) => sum + (parseFloat(app.preco) || 0), 0);
+        .reduce((sum, app) => {
+          const preco = parseFloat(app.preco) || 0;
+          return sum + (preco / 100); // Converte de centavos para reais
+        }, 0);
     });
 
     this.charts.revenue = new Chart(ctx, {
@@ -322,6 +356,9 @@ export class ReportsManager {
 
     const { appointments } = data;
 
+    // Garante que appointments é um array
+    const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
     const statusCounts = {
       pendente: 0,
       confirmado: 0,
@@ -329,7 +366,7 @@ export class ReportsManager {
       cancelado: 0
     };
 
-    appointments.forEach(app => {
+    appointmentsList.forEach(app => {
       if (statusCounts.hasOwnProperty(app.status)) {
         statusCounts[app.status]++;
       }
@@ -418,8 +455,11 @@ export class ReportsManager {
 
     const { appointments } = data;
 
+    // Garante que appointments é um array
+    const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
     const serviceCounts = {};
-    appointments.forEach(app => {
+    appointmentsList.forEach(app => {
       const type = app.tipo_vistoria || 'Não especificado';
       serviceCounts[type] = (serviceCounts[type] || 0) + 1;
     });
@@ -492,8 +532,11 @@ export class ReportsManager {
 
     const { appointments } = data;
 
+    // Garante que appointments é um array
+    const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
     const hourlyCounts = Array(24).fill(0);
-    appointments.forEach(app => {
+    appointmentsList.forEach(app => {
       if (app.horario_agendamento) {
         const hour = parseInt(app.horario_agendamento.split(':')[0]);
         if (hour >= 0 && hour < 24) {
@@ -566,9 +609,12 @@ export class ReportsManager {
 
     const { appointments } = data;
 
+    // Garante que appointments é um array
+    const appointmentsList = Array.isArray(appointments) ? appointments : [];
+
     // Agrupa por tipo de serviço
     const serviceStats = {};
-    appointments.forEach(app => {
+    appointmentsList.forEach(app => {
       const type = app.tipo_vistoria || 'Não especificado';
       if (!serviceStats[type]) {
         serviceStats[type] = {
@@ -577,7 +623,9 @@ export class ReportsManager {
         };
       }
       serviceStats[type].count++;
-      serviceStats[type].revenue += parseFloat(app.preco) || 0;
+      // Converte de centavos para reais
+      const preco = parseFloat(app.preco) || 0;
+      serviceStats[type].revenue += (preco / 100);
     });
 
     // Ordena por quantidade

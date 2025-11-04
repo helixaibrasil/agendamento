@@ -524,8 +524,8 @@ body {
   background: linear-gradient(135deg, var(--brand-primary-dark) 0%, var(--brand-primary) 100%);
   border-color: var(--brand-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4),
-              0 0 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 30px rgba(237, 106, 43, 0.4),
+              0 0 20px rgba(237, 106, 43, 0.3);
   animation: none;
 }
 
@@ -635,7 +635,7 @@ body {
 
 .benefit-card:hover {
   border-color: var(--brand-primary-lighter);
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 10px 30px rgba(237, 106, 43, 0.15);
   transform: translateY(-4px);
 }
 
@@ -647,7 +647,7 @@ body {
   font-size: var(--text-4xl);
   margin-bottom: var(--spacing-4);
   color: var(--brand-primary);
-  filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.2));
+  filter: drop-shadow(0 2px 4px rgba(237, 106, 43, 0.2));
 }
 
 .benefit-card h3 {
@@ -722,9 +722,9 @@ body {
   color: #4a5568;
 }
 
-/* SEÇÃO 2: VANTAGENS (Azul Gradiente) */
+/* SEÇÃO 2: VANTAGENS (Laranja Gradiente) */
 .menu-card-blue {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #ed6a2b 0%, #ff8c5a 100%);
 }
 
 .menu-card-blue .card-title,
@@ -989,7 +989,7 @@ body {
 .pricing-card.featured {
   border-color: var(--brand-primary);
   border-width: 2px;
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 20px 40px rgba(237, 106, 43, 0.2);
   position: relative;
 }
 
@@ -1017,7 +1017,7 @@ body {
 }
 
 .pricing-card:hover {
-  box-shadow: 0 20px 50px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 20px 50px rgba(237, 106, 43, 0.2);
   transform: translateY(-8px) scale(1.02);
   border-color: var(--brand-primary);
 }
@@ -1121,7 +1121,7 @@ body {
 }
 
 .testimonial-card:hover {
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 8px 20px rgba(237, 106, 43, 0.12);
   border-color: var(--brand-primary-lighter);
   transform: translateY(-2px);
 }
@@ -1251,7 +1251,7 @@ body {
 }
 
 .google-review-card:hover {
-  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 15px 35px rgba(237, 106, 43, 0.15);
   border-color: var(--brand-primary);
   transform: translateY(-6px) scale(1.02);
 }
@@ -1481,7 +1481,7 @@ body {
 ============================================ */
 .scheduling {
   position: relative;
-  padding: var(--spacing-24) var(--spacing-6);
+  padding: var(--spacing-12) var(--spacing-6) var(--spacing-6);
   background: transparent;
   z-index: 10;
 }
@@ -1531,7 +1531,7 @@ body {
   background: var(--bg-elevated);
   border-radius: var(--radius-xl);
   padding: var(--spacing-10);
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 20px 40px rgba(237, 106, 43, 0.08);
   max-width: 800px;
   margin: 0 auto;
   border: 1px solid var(--border-light);
@@ -1855,7 +1855,7 @@ body {
   position: relative;
   background: rgba(0, 0, 0, 0.3);
   color: var(--neutral-100);
-  padding: var(--spacing-16) var(--spacing-6) var(--spacing-6);
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-6);
   z-index: 10;
 }
 

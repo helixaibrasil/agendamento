@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -19,7 +20,10 @@ const paymentRoutes = require('./routes/payment');
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for static files in production
+  crossOriginEmbedderPolicy: false
+}));
 
 // CORS - Allow both common Vite ports and LocalTunnel
 const allowedOrigins = [
@@ -59,17 +63,33 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
+// Rate limiting mais flexível para desenvolvimento
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // limite de 100 requisições por IP
-  message: 'Muitas requisições deste IP, tente novamente mais tarde.'
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 em dev, 100 em produção
+  message: 'Muitas requisições deste IP, tente novamente mais tarde.',
+  skip: (req) => {
+    // Skip rate limiting para localhost em desenvolvimento
+    if (process.env.NODE_ENV !== 'production') {
+      const ip = req.ip || req.connection.remoteAddress;
+      return ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1';
+    }
+    return false;
+  }
 });
 
 const agendamentoLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
-  max: 10, // limite de 10 agendamentos por IP por hora
-  message: 'Limite de agendamentos excedido, tente novamente mais tarde.'
+  max: process.env.NODE_ENV === 'production' ? 10 : 100, // 100 em dev, 10 em produção
+  message: 'Limite de agendamentos excedido, tente novamente mais tarde.',
+  skip: (req) => {
+    // Skip rate limiting para localhost em desenvolvimento
+    if (process.env.NODE_ENV !== 'production') {
+      const ip = req.ip || req.connection.remoteAddress;
+      return ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1';
+    }
+    return false;
+  }
 });
 
 app.use('/api/', limiter);
@@ -95,10 +115,25 @@ app.use('/api/payment', paymentRoutes);
 // Apply stricter rate limit to agendamento creation
 app.post('/api/agendamentos', agendamentoLimiter);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Rota não encontrada' });
-});
+// Serve static files from frontend build in production
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendPath));
+
+  // Handle client-side routing - serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    } else {
+      res.status(404).json({ error: 'Rota não encontrada' });
+    }
+  });
+} else {
+  // 404 handler for development
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Rota não encontrada' });
+  });
+}
 
 // Error handler
 app.use(errorHandler);

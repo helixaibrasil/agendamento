@@ -265,6 +265,16 @@ function initReviewsCarousel() {
 
   let currentIndex = 0;
   let itemsPerPage = getItemsPerPage();
+  let isDragging = false;
+  let startPos = 0;
+  let currentTranslate = 0;
+  let prevTranslate = 0;
+  let animationID = 0;
+
+  // Desabilitar seleção de texto nos cards
+  track.style.userSelect = 'none';
+  track.style.webkitUserSelect = 'none';
+  track.style.msUserSelect = 'none';
 
   // Create dots
   const totalPages = Math.ceil(items.length / itemsPerPage);
@@ -282,11 +292,20 @@ function initReviewsCarousel() {
     return 3;
   }
 
-  function updateCarousel() {
+  function updateCarousel(smooth = true) {
     const itemWidth = items[0].offsetWidth;
     const gap = parseInt(getComputedStyle(track).gap) || 24;
     const offset = -(currentIndex * itemsPerPage * (itemWidth + gap));
+
+    if (smooth) {
+      track.style.transition = 'transform 0.3s ease-out';
+    } else {
+      track.style.transition = 'none';
+    }
+
     track.style.transform = `translateX(${offset}px)`;
+    currentTranslate = offset;
+    prevTranslate = offset;
 
     // Update dots
     const dots = dotsContainer.querySelectorAll('.carousel-dot');
@@ -294,32 +313,106 @@ function initReviewsCarousel() {
       dot.classList.toggle('active', index === currentIndex);
     });
 
-    // Update buttons state
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex >= totalPages - 1;
+    // Botões sempre habilitados (loop infinito)
+    prevBtn.disabled = false;
+    nextBtn.disabled = false;
   }
 
   function goToSlide(index) {
-    currentIndex = Math.max(0, Math.min(index, totalPages - 1));
+    currentIndex = index;
     updateCarousel();
   }
 
   function nextSlide() {
-    if (currentIndex < totalPages - 1) {
+    // Loop infinito: volta para o início quando chegar no final
+    if (currentIndex >= totalPages - 1) {
+      currentIndex = 0;
+    } else {
       currentIndex++;
-      updateCarousel();
     }
+    updateCarousel();
   }
 
   function prevSlide() {
-    if (currentIndex > 0) {
+    // Loop infinito: vai para o final quando está no início
+    if (currentIndex <= 0) {
+      currentIndex = totalPages - 1;
+    } else {
       currentIndex--;
-      updateCarousel();
     }
+    updateCarousel();
   }
 
   prevBtn.addEventListener('click', prevSlide);
   nextBtn.addEventListener('click', nextSlide);
+
+  // Touch events
+  track.addEventListener('touchstart', touchStart);
+  track.addEventListener('touchend', touchEnd);
+  track.addEventListener('touchmove', touchMove);
+
+  // Mouse events
+  track.addEventListener('mousedown', touchStart);
+  track.addEventListener('mouseup', touchEnd);
+  track.addEventListener('mouseleave', touchEnd);
+  track.addEventListener('mousemove', touchMove);
+
+  function touchStart(event) {
+    isDragging = true;
+    startPos = getPositionX(event);
+    animationID = requestAnimationFrame(animation);
+    track.style.cursor = 'grabbing';
+  }
+
+  function touchEnd() {
+    isDragging = false;
+    cancelAnimationFrame(animationID);
+    track.style.cursor = 'grab';
+
+    const movedBy = currentTranslate - prevTranslate;
+
+    // Se arrastou mais de 100px, muda de slide
+    if (movedBy < -100 && currentIndex < totalPages - 1) {
+      currentIndex++;
+    } else if (movedBy > 100 && currentIndex > 0) {
+      currentIndex--;
+    } else if (movedBy < -100 && currentIndex >= totalPages - 1) {
+      // Loop: volta pro início
+      currentIndex = 0;
+    } else if (movedBy > 100 && currentIndex <= 0) {
+      // Loop: vai pro final
+      currentIndex = totalPages - 1;
+    }
+
+    updateCarousel();
+  }
+
+  function touchMove(event) {
+    if (isDragging) {
+      const currentPosition = getPositionX(event);
+      currentTranslate = prevTranslate + currentPosition - startPos;
+    }
+  }
+
+  function getPositionX(event) {
+    return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
+  }
+
+  function animation() {
+    if (isDragging) {
+      track.style.transition = 'none';
+      track.style.transform = `translateX(${currentTranslate}px)`;
+      requestAnimationFrame(animation);
+    }
+  }
+
+  // Prevenir comportamento padrão de arrastar imagens
+  items.forEach(item => {
+    const images = item.querySelectorAll('img');
+    images.forEach(img => {
+      img.addEventListener('dragstart', (e) => e.preventDefault());
+    });
+  });
 
   // Handle resize
   let resizeTimer;
@@ -346,6 +439,9 @@ function initReviewsCarousel() {
       }
     }, 250);
   });
+
+  // Cursor grab
+  track.style.cursor = 'grab';
 
   updateCarousel();
 }
